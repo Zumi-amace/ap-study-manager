@@ -1,6 +1,7 @@
 import { db } from './database';
 import { calculateReview } from '../logic/review';
 import { toLocalDateString } from '../logic/date';
+import { isHistoricalReview, uniqueTagIds } from '../logic/studyLog';
 import { validateStudyLog } from '../logic/validation';
 import type {
   AppSettings,
@@ -30,7 +31,9 @@ async function attachTags(logs: StudyLog[]): Promise<StudyLog[]> {
 }
 
 export async function createStudyLog(input: CreateStudyLogInput): Promise<StudyLog> {
-  const errors = validateStudyLog(input);
+  const normalizedTagIds = uniqueTagIds(input.tag_ids);
+  const normalizedInput = { ...input, tag_ids: normalizedTagIds };
+  const errors = validateStudyLog(normalizedInput);
   if (errors.length) throw new Error(errors.join('\n'));
 
   return db.transaction(
@@ -51,13 +54,13 @@ export async function createStudyLog(input: CreateStudyLogInput): Promise<StudyL
       const id = (await db.study_logs.add(log)) as number;
 
       await db.study_log_tags.bulkAdd(
-        input.tag_ids.map((tagId) => ({
+        normalizedTagIds.map((tagId) => ({
           study_log_id: id,
           tag_id: tagId
         }))
       );
 
-      for (const tagId of input.tag_ids) {
+      for (const tagId of normalizedTagIds) {
         await recalcReview(tagId, accuracyRate, input.studied_at);
       }
 
@@ -168,6 +171,13 @@ export async function recalcReview(
   reviewedAt = toLocalDateString()
 ): Promise<ReviewSchedule> {
   const current = await db.review_schedules.where('tag_id').equals(tagId).first();
+
+  // 履歴の後追い入力はログとして保存するが、現在の復習状態は巻き戻さない。
+  // 既存の最終学習日より古い日付なら、last_reviewed_atを含めてスケジュール更新を行わない。
+  if (current && isHistoricalReview(reviewedAt, current.last_reviewed_at)) {
+    return current;
+  }
+
   const result = calculateReview({
     repetition: current?.repetition ?? 0,
     intervalDays: current?.interval_days ?? 1,

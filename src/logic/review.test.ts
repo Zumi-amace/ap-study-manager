@@ -35,16 +35,30 @@ describe('calculateReview', () => {
     expect(second.repetition).toBe(2);
   });
 
-  it('不合格時は1日へ戻し、ease factorは1.3未満にならない', () => {
+  it.each([0, 40, 60])(
+    'quality 0〜2相当の正答率 %s では間隔だけをリセットしEFを据え置く',
+    (accuracyRate) => {
+      const result = calculateReview({
+        repetition: 4,
+        intervalDays: 20,
+        easeFactor: 2.1,
+        accuracyRate,
+        reviewedAt: '2026-06-25'
+      });
+      expect(result.repetition).toBe(0);
+      expect(result.intervalDays).toBe(1);
+      expect(result.easeFactor).toBe(2.1);
+    }
+  );
+
+  it('quality 3以上ではease factorを更新する', () => {
     const result = calculateReview({
-      repetition: 4,
-      intervalDays: 20,
-      easeFactor: 1.3,
-      accuracyRate: 0,
+      repetition: 2,
+      intervalDays: 3,
+      easeFactor: 2.5,
+      accuracyRate: 70,
       reviewedAt: '2026-06-25'
     });
-    expect(result.repetition).toBe(0);
-    expect(result.intervalDays).toBe(1);
-    expect(result.easeFactor).toBe(1.3);
+    expect(result.easeFactor).not.toBe(2.5);
   });
 });

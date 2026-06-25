@@ -42,6 +42,7 @@ export function StudyPage() {
         title="応用情報 過去問道場"
         src={url}
         className="min-h-0 flex-1 border-0 bg-white"
+        sandbox="allow-scripts allow-forms allow-popups"
         referrerPolicy="strict-origin-when-cross-origin"
       />
     </div>
