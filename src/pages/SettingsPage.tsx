@@ -22,7 +22,7 @@ export function SettingsPage() {
     const [settings, links] = await Promise.all([getSettings(), listLinks()]);
     return { settings, links };
   }, []);
-  const [mode, setMode] = useState<LinkOpenMode>('webview');
+  const [mode, setMode] = useState<LinkOpenMode>('external_browser');
   const [modeMessage, setModeMessage] = useState('');
   const [form, setForm] = useState<LinkForm>(emptyForm);
   const [editingId, setEditingId] = useState<number>();
@@ -100,11 +100,11 @@ export function SettingsPage() {
       </section>
 
       <section className="card mt-6">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-start gap-3 sm:items-center">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
             {editingId ? <Edit3 size={20} /> : <Plus size={20} />}
           </span>
-          <div>
+          <div className="min-w-0">
             <h2 className="font-bold">{editingId ? 'リンクを編集' : 'リンクを追加'}</h2>
             <p className="text-sm text-slate-500">分野別ページなど、よく使うURLを保存できます。</p>
           </div>
@@ -148,15 +148,15 @@ export function SettingsPage() {
             />
           </label>
           {formError && <p className="sm:col-span-2 rounded-xl bg-red-50 p-3 text-sm text-red-700">{formError}</p>}
-          <div className="flex flex-wrap gap-2 sm:col-span-2">
-            <button type="submit" className="btn-primary">
+          <div className="grid gap-2 sm:col-span-2 sm:flex sm:flex-wrap">
+            <button type="submit" className="btn-primary w-full sm:w-auto">
               <Save size={18} />
               {editingId ? '変更を保存' : 'リンクを追加'}
             </button>
             {editingId && (
               <button
                 type="button"
-                className="btn-secondary"
+                className="btn-secondary w-full sm:w-auto"
                 onClick={() => {
                   setEditingId(undefined);
                   setForm(emptyForm);
@@ -193,16 +193,16 @@ export function SettingsPage() {
                   {link.description && <p className="mt-1 text-sm text-slate-600">{link.description}</p>}
                   <p className="mt-1 truncate text-xs text-slate-400">{link.url}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" className="btn-secondary px-3" onClick={() => openKakomon(link.url)}>
+                <div className="grid w-full grid-cols-1 gap-2 min-[390px]:grid-cols-3 sm:flex sm:w-auto sm:flex-wrap">
+                  <button type="button" className="btn-secondary w-full px-3 sm:w-auto" onClick={() => openKakomon(link.url)}>
                     <ExternalLink size={17} />
                     開く
                   </button>
-                  <button type="button" className="btn-secondary px-3" onClick={() => editLink(link)}>
+                  <button type="button" className="btn-secondary w-full px-3 sm:w-auto" onClick={() => editLink(link)}>
                     <Edit3 size={17} />
                     編集
                   </button>
-                  <button type="button" className="btn-danger" onClick={() => removeLink(link.id!)}>
+                  <button type="button" className="btn-danger min-h-11 w-full sm:w-auto" onClick={() => removeLink(link.id!)}>
                     <Trash2 size={17} />
                     削除
                   </button>
@@ -229,7 +229,7 @@ function ModeOption({
 }) {
   return (
     <label
-      className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition ${
+      className={`flex min-h-16 cursor-pointer gap-3 rounded-xl border p-4 transition ${
         checked ? 'border-brand-600 bg-brand-50' : 'border-slate-200 hover:border-slate-300'
       }`}
     >

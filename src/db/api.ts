@@ -16,18 +16,33 @@ import type {
   WeaknessSummary
 } from '../types';
 
+// MVPは端末内の単一ユーザー専用。user_idは将来の同期・複数ユーザー化に備えて保持する。
 const USER_ID = 1;
 
 async function attachTags(logs: StudyLog[]): Promise<StudyLog[]> {
-  return Promise.all(
-    logs.map(async (log) => {
-      const mappings = await db.study_log_tags.where('study_log_id').equals(log.id!).toArray();
-      const tags = (await Promise.all(mappings.map((mapping) => db.weak_area_tags.get(mapping.tag_id)))).filter(
-        (tag): tag is Tag => Boolean(tag)
-      );
-      return { ...log, tags };
-    })
+  const logIds = logs.flatMap((log) => (log.id === undefined ? [] : [log.id]));
+  if (logIds.length === 0) return logs.map((log) => ({ ...log, tags: [] }));
+
+  const mappings = await db.study_log_tags.where('study_log_id').anyOf(logIds).toArray();
+  const tagIds = [...new Set(mappings.map((mapping) => mapping.tag_id))];
+  const tags = (await db.weak_area_tags.bulkGet(tagIds)).filter(
+    (tag): tag is Tag => Boolean(tag)
   );
+  const tagById = new Map(tags.map((tag) => [tag.id!, tag]));
+  const tagIdsByLogId = new Map<number, number[]>();
+
+  for (const mapping of mappings) {
+    const current = tagIdsByLogId.get(mapping.study_log_id) ?? [];
+    current.push(mapping.tag_id);
+    tagIdsByLogId.set(mapping.study_log_id, current);
+  }
+
+  return logs.map((log) => ({
+    ...log,
+    tags: (tagIdsByLogId.get(log.id!) ?? [])
+      .map((tagId) => tagById.get(tagId))
+      .filter((tag): tag is Tag => Boolean(tag))
+  }));
 }
 
 export async function createStudyLog(input: CreateStudyLogInput): Promise<StudyLog> {
@@ -113,15 +128,26 @@ export async function createTag(name: string): Promise<Tag> {
 }
 
 export async function getWeaknessSummary(): Promise<WeaknessSummary[]> {
-  const tags = await listTags();
+  const [tags, mappings, allLogs] = await Promise.all([
+    listTags(),
+    db.study_log_tags.toArray(),
+    db.study_logs.where('user_id').equals(USER_ID).toArray()
+  ]);
+  const logById = new Map(allLogs.map((log) => [log.id!, log]));
+  const logIdsByTagId = new Map<number, Set<number>>();
+
+  for (const mapping of mappings) {
+    const current = logIdsByTagId.get(mapping.tag_id) ?? new Set<number>();
+    current.add(mapping.study_log_id);
+    logIdsByTagId.set(mapping.tag_id, current);
+  }
+
   const summaries: WeaknessSummary[] = [];
 
   for (const tag of tags) {
-    const mappings = await db.study_log_tags.where('tag_id').equals(tag.id!).toArray();
-    const logIds = new Set(mappings.map((mapping) => mapping.study_log_id));
-    const logs = (await db.study_logs.bulkGet([...logIds])).filter(
-      (log): log is StudyLog => Boolean(log)
-    );
+    const logs = [...(logIdsByTagId.get(tag.id!) ?? [])]
+      .map((logId) => logById.get(logId))
+      .filter((log): log is StudyLog => Boolean(log));
     if (logs.length === 0) continue;
 
     logs.sort((a, b) => b.studied_at.localeCompare(a.studied_at) || b.created_at.localeCompare(a.created_at));
@@ -147,22 +173,21 @@ export async function listDueReviews(asOf = toLocalDateString()): Promise<Review
     .where('next_review_date')
     .belowOrEqual(asOf)
     .sortBy('next_review_date');
-  return Promise.all(
-    schedules.map(async (schedule) => ({
-      ...schedule,
-      tag: await db.weak_area_tags.get(schedule.tag_id)
-    }))
-  );
+  return attachReviewTags(schedules);
 }
 
 export async function listAllReviews(): Promise<ReviewSchedule[]> {
   const schedules = await db.review_schedules.orderBy('next_review_date').toArray();
-  return Promise.all(
-    schedules.map(async (schedule) => ({
-      ...schedule,
-      tag: await db.weak_area_tags.get(schedule.tag_id)
-    }))
+  return attachReviewTags(schedules);
+}
+
+async function attachReviewTags(schedules: ReviewSchedule[]): Promise<ReviewSchedule[]> {
+  const tagIds = [...new Set(schedules.map((schedule) => schedule.tag_id))];
+  const tags = (await db.weak_area_tags.bulkGet(tagIds)).filter(
+    (tag): tag is Tag => Boolean(tag)
   );
+  const tagById = new Map(tags.map((tag) => [tag.id!, tag]));
+  return schedules.map((schedule) => ({ ...schedule, tag: tagById.get(schedule.tag_id) }));
 }
 
 export async function recalcReview(

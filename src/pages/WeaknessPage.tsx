@@ -45,22 +45,27 @@ export function WeaknessPage() {
         />
       ) : (
         <>
-          <section className="card">
+          <section className="card overflow-hidden">
             <h2 className="mb-5 text-lg font-bold">分野別正答率</h2>
-            <div className="h-[420px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ left: 20, right: 25 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" domain={[0, 100]} unit="%" />
-                  <YAxis type="category" dataKey="name" width={145} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(value) => [`${value}%`, '正答率']} />
-                  <Bar dataKey="accuracy" fill="#0f766e" radius={[0, 7, 7, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <p className="mb-2 text-xs text-slate-500 sm:hidden">グラフは横にスワイプできます。</p>
+            <div className="mobile-scroll">
+              <div className="h-[420px] min-w-[520px] sm:min-w-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 25 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" domain={[0, 100]} unit="%" />
+                    <YAxis type="category" dataKey="name" width={145} tick={{ fontSize: 11 }} />
+                    <Tooltip formatter={(value) => [`${value}%`, '正答率']} />
+                    <Bar dataKey="accuracy" fill="#0f766e" radius={[0, 7, 7, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </section>
 
-          <section className="card mt-6 overflow-x-auto p-0">
+          <section className="card mt-6 overflow-hidden p-0">
+            <p className="px-4 pt-4 text-xs text-slate-500 sm:hidden">表は横にスワイプできます。</p>
+            <div className="mobile-scroll">
             <table className="w-full min-w-[660px] text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
                 <tr>
@@ -83,6 +88,7 @@ export function WeaknessPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </section>
         </>
       )}

@@ -25,15 +25,21 @@ export function AppLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen min-w-0 overflow-x-hidden bg-slate-50">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <NavLink to="/" className="flex items-center gap-3" onClick={() => setMenuOpen(false)}>
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-700 text-lg font-black text-white">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6">
+          <NavLink
+            to="/"
+            className="flex min-w-0 items-center gap-2.5 sm:gap-3"
+            onClick={() => setMenuOpen(false)}
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-700 text-lg font-black text-white">
               AP
             </span>
-            <div>
-              <p className="font-bold leading-tight text-slate-900">AP Study Manager</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold leading-tight text-slate-900 sm:text-base">
+                AP Study Manager
+              </p>
               <p className="text-xs text-slate-500">午前対策・学習管理</p>
             </div>
           </NavLink>
@@ -50,9 +56,9 @@ export function AppLayout() {
 
       <div className="mx-auto flex max-w-7xl">
         <aside
-          className={`${menuOpen ? 'block' : 'hidden'} fixed inset-x-0 top-16 z-30 border-b border-slate-200 bg-white p-3 shadow-lg md:sticky md:top-16 md:block md:h-[calc(100vh-4rem)] md:w-60 md:shrink-0 md:border-b-0 md:border-r md:p-4 md:shadow-none`}
+          className={`${menuOpen ? 'block' : 'hidden'} fixed inset-x-0 top-16 z-30 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-slate-200 bg-white p-3 shadow-lg md:sticky md:top-16 md:block md:h-[calc(100vh-4rem)] md:max-h-none md:w-60 md:shrink-0 md:border-b-0 md:border-r md:p-4 md:shadow-none`}
         >
-          <nav className="grid grid-cols-2 gap-1 md:block">
+          <nav className="grid grid-cols-2 gap-1 max-[350px]:grid-cols-1 md:block">
             {navigation.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}
@@ -60,7 +66,7 @@ export function AppLayout() {
                 end={to === '/'}
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${
+                  `flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${
                     isActive
                       ? 'bg-brand-50 text-brand-800'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -74,7 +80,7 @@ export function AppLayout() {
           </nav>
         </aside>
 
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main className="min-w-0 max-w-full flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
           <Outlet />
         </main>
       </div>

@@ -26,16 +26,16 @@ export function HistoryPage() {
     <div>
       <PageHeader title="学習履歴" description="過去の演習結果を時系列で振り返ります。" />
 
-      <section className="card mb-6 grid gap-4 sm:grid-cols-3">
-        <label>
+      <section className="card mb-5 grid min-w-0 gap-4 sm:mb-6 sm:grid-cols-3">
+        <label className="min-w-0">
           <span className="label">開始日</span>
           <input type="date" className="input" value={from} onChange={(event) => setFrom(event.target.value)} />
         </label>
-        <label>
+        <label className="min-w-0">
           <span className="label">終了日</span>
           <input type="date" className="input" value={to} onChange={(event) => setTo(event.target.value)} />
         </label>
-        <label>
+        <label className="min-w-0">
           <span className="label">分野</span>
           <select className="input" value={tagId} onChange={(event) => setTagId(event.target.value)}>
             <option value="">すべて</option>
@@ -65,19 +65,19 @@ export function HistoryPage() {
               <article key={log.id} className="card p-0">
                 <button
                   type="button"
-                  className="flex w-full flex-col gap-4 p-5 text-left sm:flex-row sm:items-center"
+                  className="flex w-full min-w-0 flex-col gap-3 p-4 text-left sm:flex-row sm:items-center sm:gap-4 sm:p-5"
                   onClick={() => setExpandedId(expanded ? undefined : log.id)}
                 >
-                  <div className="min-w-32">
+                  <div className="min-w-0 sm:min-w-32">
                     <p className="text-sm text-slate-500">{formatDate(log.studied_at)}</p>
                     <p className="mt-1 font-bold">{log.study_time_min}分</p>
                   </div>
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap gap-1.5">
                       {log.tags?.map((tag) => (
                         <span
                           key={tag.id}
-                          className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700"
+                          className="max-w-full break-words rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700"
                         >
                           {tag.name}
                         </span>
@@ -87,13 +87,13 @@ export function HistoryPage() {
                       {log.correct_count}/{log.total_questions}問正解
                     </p>
                   </div>
-                  <div className="flex items-center justify-between gap-5 sm:justify-end">
+                  <div className="flex w-full items-center justify-between gap-5 border-t border-slate-100 pt-3 sm:w-auto sm:border-0 sm:pt-0 sm:justify-end">
                     <p className="text-2xl font-black text-slate-950">{log.accuracy_rate}%</p>
                     {expanded ? <ChevronUp /> : <ChevronDown />}
                   </div>
                 </button>
                 {expanded && (
-                  <div className="border-t border-slate-100 px-5 py-4">
+                  <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
                     <p className="text-sm font-semibold text-slate-700">間違えた理由メモ</p>
                     <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
                       {log.wrong_reason_note || 'メモはありません。'}

@@ -50,7 +50,7 @@ export async function seedDatabase(): Promise<void> {
         await db.app_settings.add({
           id: 1,
           user_id: 1,
-          link_open_mode: 'webview',
+          link_open_mode: 'external_browser',
           updated_at: now
         });
       }

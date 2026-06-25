@@ -124,7 +124,10 @@ function ChartCard({
   return (
     <section className={`card ${className}`}>
       <h2 className="mb-5 text-lg font-bold">{title}</h2>
-      <div className="h-72">{children}</div>
+      <p className="mb-2 text-xs text-slate-500 sm:hidden">グラフは横にスワイプできます。</p>
+      <div className="mobile-scroll">
+        <div className="h-72 min-w-[500px] sm:min-w-0">{children}</div>
+      </div>
     </section>
   );
 }

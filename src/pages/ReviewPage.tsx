@@ -93,7 +93,7 @@ export function ReviewPage() {
                 </div>
                 <button
                   type="button"
-                  className="btn-primary shrink-0"
+                  className="btn-primary w-full shrink-0 sm:w-auto"
                   disabled={!link}
                   onClick={() => link && openKakomon(link.url)}
                 >

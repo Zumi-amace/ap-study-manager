@@ -34,7 +34,7 @@ export function HomePage() {
 
       {error && <p className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
 
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid min-w-0 gap-3 sm:grid-cols-3 sm:gap-4">
         <SummaryCard
           icon={Clock3}
           label="学習時間"
@@ -55,7 +55,7 @@ export function HomePage() {
         />
       </section>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+      <section className="mt-5 grid min-w-0 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[1.3fr_1fr]">
         <div className="card bg-gradient-to-br from-brand-800 to-brand-600 text-white">
           <p className="text-sm font-semibold text-brand-100">演習を始める</p>
           <h2 className="mt-2 text-2xl font-bold">過去問道場を開く</h2>
@@ -64,7 +64,7 @@ export function HomePage() {
           </p>
           <button
             type="button"
-            className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl bg-white px-5 py-3 font-bold text-brand-800 transition hover:bg-brand-50 disabled:opacity-50"
+            className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 font-bold text-brand-800 transition hover:bg-brand-50 disabled:opacity-50 sm:w-auto sm:px-5"
             disabled={!primaryLink}
             onClick={() => primaryLink && openKakomon(primaryLink.url)}
           >
@@ -88,7 +88,10 @@ export function HomePage() {
             <ArrowRight className="text-slate-400 transition group-hover:translate-x-1" />
           </div>
           <p className="mt-5 text-sm font-semibold text-slate-600">復習アラート</p>
-          <p className="mt-1 text-3xl font-black text-slate-950">{data?.reviews.length ?? 0}<span className="ml-1 text-base">分野</span></p>
+          <p className="mt-1 text-3xl font-black text-slate-950">
+            {data?.reviews.length ?? 0}
+            <span className="ml-1 text-base">分野</span>
+          </p>
           <p className="mt-2 text-sm text-slate-600">
             {data?.reviews.length ? '期限を迎えた分野があります。' : '期限を迎えた復習はありません。'}
           </p>
@@ -125,11 +128,11 @@ function SummaryCard({
     amber: 'bg-amber-50 text-amber-700'
   };
   return (
-    <div className="card flex items-center gap-4">
+    <div className="card flex min-w-0 items-center gap-3 sm:gap-4">
       <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${tones[tone]}`}>
         <Icon />
       </span>
-      <div>
+      <div className="min-w-0">
         <p className="text-sm font-medium text-slate-500">{label}</p>
         <p className="text-2xl font-black text-slate-950">{value}</p>
       </div>
@@ -149,9 +152,9 @@ function MenuLink({
   return (
     <Link
       to={to}
-      className="card flex items-center justify-between p-4 transition hover:-translate-y-0.5 hover:border-brand-300"
+      className="card flex min-h-16 min-w-0 items-center justify-between gap-3 p-4 transition hover:-translate-y-0.5 hover:border-brand-300"
     >
-      <span className="flex items-center gap-3 font-semibold">
+      <span className="flex min-w-0 items-center gap-3 break-words font-semibold">
         <Icon size={20} className="text-brand-700" />
         {label}
       </span>

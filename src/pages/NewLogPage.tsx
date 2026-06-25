@@ -70,12 +70,12 @@ export function NewLogPage() {
         description="過去問道場での演習結果を手入力します。正答率と復習予定は保存時に自動計算されます。"
       />
 
-      <form className="grid gap-6 lg:grid-cols-[1fr_0.8fr]" onSubmit={submit}>
-        <div className="space-y-6">
+      <form className="grid min-w-0 gap-5 sm:gap-6 lg:grid-cols-[1fr_0.8fr]" onSubmit={submit}>
+        <div className="min-w-0 space-y-5 sm:space-y-6">
           <section className="card">
             <h2 className="text-lg font-bold">演習結果</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <label>
+              <label className="min-w-0">
                 <span className="label">学習日 *</span>
                 <input
                   type="date"
@@ -86,7 +86,7 @@ export function NewLogPage() {
                   required
                 />
               </label>
-              <label>
+              <label className="min-w-0">
                 <span className="label">学習時間（分）*</span>
                 <input
                   type="number"
@@ -98,7 +98,7 @@ export function NewLogPage() {
                   required
                 />
               </label>
-              <label>
+              <label className="min-w-0">
                 <span className="label">問題数 *</span>
                 <input
                   type="number"
@@ -110,7 +110,7 @@ export function NewLogPage() {
                   required
                 />
               </label>
-              <label>
+              <label className="min-w-0">
                 <span className="label">正解数 *</span>
                 <input
                   type="number"
@@ -149,7 +149,7 @@ export function NewLogPage() {
           </section>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-5 sm:space-y-6">
           <section className="card">
             <h2 className="text-lg font-bold">分野タグ *</h2>
             <p className="mt-1 text-sm text-slate-600">演習した分野を1つ以上選択してください。</p>
@@ -172,7 +172,7 @@ export function NewLogPage() {
                         return (
                           <label
                             key={tag.id}
-                            className={`cursor-pointer rounded-full border px-3 py-2 text-sm font-semibold transition ${
+                            className={`flex min-h-11 max-w-full cursor-pointer items-center break-words rounded-xl border px-3 py-2 text-sm font-semibold transition ${
                               checked
                                 ? 'border-brand-600 bg-brand-700 text-white'
                                 : 'border-slate-200 bg-white text-slate-600 hover:border-brand-400'
@@ -206,7 +206,7 @@ export function NewLogPage() {
             </section>
           )}
 
-          <button type="submit" className="btn-primary w-full" disabled={saving}>
+          <button type="submit" className="btn-primary min-h-12 w-full" disabled={saving}>
             {saving ? <CheckCircle2 className="animate-pulse" /> : <Save />}
             {saving ? '保存中...' : 'ログを保存'}
           </button>

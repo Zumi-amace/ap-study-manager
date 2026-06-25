@@ -16,6 +16,8 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'AP Study Manager',
           short_name: 'AP Study',
+          lang: 'ja',
+          dir: 'ltr',
           description: '応用情報技術者試験 午前対策の学習管理アプリ',
           theme_color: '#0f766e',
           background_color: '#f8fafc',
