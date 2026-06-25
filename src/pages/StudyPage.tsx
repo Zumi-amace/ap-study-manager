@@ -1,22 +1,11 @@
 import { AlertTriangle, ArrowLeft, ExternalLink } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { openExternalBrowser } from '../hooks/useOpenKakomon';
-
-const DEFAULT_URL = 'https://www.ap-siken.com/s/apkakomon.php';
-
-function safeUrl(raw: string | null): string {
-  if (!raw) return DEFAULT_URL;
-  try {
-    const url = new URL(raw);
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : DEFAULT_URL;
-  } catch {
-    return DEFAULT_URL;
-  }
-}
+import { safeKakomonUrl } from '../logic/kakomonUrl';
 
 export function StudyPage() {
   const [params] = useSearchParams();
-  const url = safeUrl(params.get('url'));
+  const url = safeKakomonUrl(params.get('url'));
 
   return (
     <div className="-m-3 flex h-[calc(100dvh-4rem)] min-h-0 min-w-0 flex-col overflow-hidden sm:-m-6 lg:-m-8">
@@ -42,8 +31,9 @@ export function StudyPage() {
         title="応用情報 過去問道場"
         src={url}
         className="min-h-0 w-full min-w-0 flex-1 border-0 bg-white"
-        // 出題開始後も同一サイト内でCookieとJavaScriptを使って遷移するため、
-        // 外部オリジンとしての状態維持と別窓遷移を許可する。
+        // ap-siken.com の出題フォーム・スクリプト・Cookie維持に必要なため、
+        // allow-same-origin と allow-scripts を意図的に併用する。
+        // 代わりにCSP frame-srcとsafeKakomonUrlの両方で表示先をap-siken.com系に限定する。
         sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals"
         referrerPolicy="strict-origin-when-cross-origin"
       />
