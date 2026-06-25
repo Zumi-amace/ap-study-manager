@@ -28,20 +28,23 @@ export function calculateReview(input: ReviewCalculationInput): ReviewCalculatio
   const quality = accuracyRateToQuality(input.accuracyRate);
   let repetition = input.repetition;
   let intervalDays = input.intervalDays;
+  let easeFactor = input.easeFactor;
 
+  // 簡略SM-2として、成功時の間隔伸長とEF更新を採用する。
+  // 失敗時は反復回数と間隔だけをリセットし、苦手分野のEFが下がり続けるのを防ぐ。
   if (quality >= 3) {
     intervalDays =
       repetition === 0 ? 1 : repetition === 1 ? 3 : Math.round(intervalDays * input.easeFactor);
     repetition += 1;
+    easeFactor = Math.max(
+      1.3,
+      input.easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+    );
   } else {
     repetition = 0;
     intervalDays = 1;
   }
 
-  const easeFactor = Math.max(
-    1.3,
-    input.easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-  );
   const reviewedAt = input.reviewedAt ?? toLocalDateString();
 
   return {

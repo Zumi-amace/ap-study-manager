@@ -41,6 +41,8 @@ jobs:
 
       - name: Build for Pages
         run: pnpm build:pages
+        env:
+          GITHUB_PAGES: "true"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
