@@ -42,7 +42,9 @@ export function StudyPage() {
         title="応用情報 過去問道場"
         src={url}
         className="min-h-0 w-full min-w-0 flex-1 border-0 bg-white"
-        sandbox="allow-scripts allow-forms allow-popups"
+        // 出題開始後も同一サイト内でCookieとJavaScriptを使って遷移するため、
+        // 外部オリジンとしての状態維持と別窓遷移を許可する。
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals"
         referrerPolicy="strict-origin-when-cross-origin"
       />
     </div>
