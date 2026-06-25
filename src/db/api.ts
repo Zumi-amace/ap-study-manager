@@ -7,6 +7,7 @@ import type {
   AppSettings,
   CreateStudyLogInput,
   DailySummary,
+  KakomonDisplayMode,
   LinkOpenMode,
   ReviewSchedule,
   SavedLink,
@@ -229,21 +230,85 @@ export async function recalcReview(
 export async function getSettings(): Promise<AppSettings> {
   const settings = await db.app_settings.get(1);
   if (!settings) throw new Error('設定が初期化されていません。');
-  return settings;
+  return {
+    ...settings,
+    kakomon_display_mode: settings.kakomon_display_mode ?? 'mobile',
+    review_algorithm_version: settings.review_algorithm_version ?? 1
+  };
 }
 
 export async function updateLinkOpenMode(mode: LinkOpenMode): Promise<AppSettings> {
   if (mode !== 'webview' && mode !== 'external_browser') {
     throw new Error('開き方の指定が不正です。');
   }
+  const current = await getSettings();
   const settings: AppSettings = {
-    id: 1,
-    user_id: USER_ID,
+    ...current,
     link_open_mode: mode,
     updated_at: new Date().toISOString()
   };
   await db.app_settings.put(settings);
   return settings;
+}
+
+export async function updateKakomonDisplayMode(
+  mode: KakomonDisplayMode
+): Promise<AppSettings> {
+  if (mode !== 'mobile' && mode !== 'desktop') {
+    throw new Error('サイト表示の指定が不正です。');
+  }
+  const current = await getSettings();
+  const settings: AppSettings = {
+    ...current,
+    kakomon_display_mode: mode,
+    updated_at: new Date().toISOString()
+  };
+  await db.app_settings.put(settings);
+  return settings;
+}
+
+export async function rebuildReviewSchedules(): Promise<ReviewSchedule[]> {
+  await db.transaction(
+    'rw',
+    [db.study_logs, db.study_log_tags, db.review_schedules],
+    async () => {
+      const [logs, mappings] = await Promise.all([
+        db.study_logs.where('user_id').equals(USER_ID).toArray(),
+        db.study_log_tags.toArray()
+      ]);
+      const tagIdsByLogId = new Map<number, Set<number>>();
+      for (const mapping of mappings) {
+        const current = tagIdsByLogId.get(mapping.study_log_id) ?? new Set<number>();
+        current.add(mapping.tag_id);
+        tagIdsByLogId.set(mapping.study_log_id, current);
+      }
+
+      logs.sort(
+        (a, b) =>
+          a.studied_at.localeCompare(b.studied_at) ||
+          a.created_at.localeCompare(b.created_at)
+      );
+      await db.review_schedules.clear();
+
+      for (const log of logs) {
+        for (const tagId of tagIdsByLogId.get(log.id!) ?? []) {
+          await recalcReview(tagId, log.accuracy_rate, log.studied_at);
+        }
+      }
+    }
+  );
+  return listAllReviews();
+}
+
+export async function migrateReviewSchedulesIfNeeded(): Promise<void> {
+  const settings = await getSettings();
+  if ((settings.review_algorithm_version ?? 1) >= 2) return;
+  await rebuildReviewSchedules();
+  await db.app_settings.put({
+    ...settings,
+    review_algorithm_version: 2,
+    updated_at: new Date().toISOString()
+  });
 }
 
 export async function listLinks(category?: string): Promise<SavedLink[]> {

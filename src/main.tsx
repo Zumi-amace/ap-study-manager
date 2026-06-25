@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
+import { migrateReviewSchedulesIfNeeded } from './db/api';
 import { seedDatabase } from './db/seed';
 import './index.css';
 
@@ -10,6 +11,7 @@ registerSW({ immediate: true });
 
 async function bootstrap() {
   await seedDatabase();
+  await migrateReviewSchedulesIfNeeded();
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <HashRouter>

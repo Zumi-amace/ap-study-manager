@@ -1,4 +1,5 @@
 export type LinkOpenMode = 'webview' | 'external_browser';
+export type KakomonDisplayMode = 'mobile' | 'desktop';
 
 export interface User {
   id: number;
@@ -49,6 +50,8 @@ export interface AppSettings {
   id: number;
   user_id: number;
   link_open_mode: LinkOpenMode;
+  kakomon_display_mode?: KakomonDisplayMode;
+  review_algorithm_version?: number;
   updated_at: string;
 }
 

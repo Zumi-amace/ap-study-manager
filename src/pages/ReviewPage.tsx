@@ -1,7 +1,8 @@
-import { BookOpen, CalendarCheck, Clock3, Target } from 'lucide-react';
+import { BookOpen, CalendarCheck, Clock3, RefreshCw, Target } from 'lucide-react';
+import { useState } from 'react';
 import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
-import { listAllReviews, listLinks } from '../db/api';
+import { listAllReviews, listLinks, rebuildReviewSchedules } from '../db/api';
 import { useAsync } from '../hooks/useAsync';
 import { useOpenKakomon } from '../hooks/useOpenKakomon';
 import { formatDate, toLocalDateString } from '../logic/date';
@@ -10,10 +11,28 @@ import type { SavedLink } from '../types';
 export function ReviewPage() {
   const openKakomon = useOpenKakomon();
   const today = toLocalDateString();
-  const { data, loading, error } = useAsync(async () => {
+  const { data, loading, error, reload } = useAsync(async () => {
     const [reviews, links] = await Promise.all([listAllReviews(), listLinks()]);
     return { reviews, links };
   }, []);
+  const [repairing, setRepairing] = useState(false);
+  const [repairMessage, setRepairMessage] = useState('');
+
+  async function repairReviews() {
+    setRepairing(true);
+    setRepairMessage('');
+    try {
+      await rebuildReviewSchedules();
+      reload();
+      setRepairMessage('学習履歴から復習予定を再計算しました。');
+    } catch (reason) {
+      setRepairMessage(
+        reason instanceof Error ? reason.message : '復習予定の再計算に失敗しました。'
+      );
+    } finally {
+      setRepairing(false);
+    }
+  }
 
   function linkFor(tagName: string): SavedLink | undefined {
     return (
@@ -27,9 +46,25 @@ export function ReviewPage() {
       <PageHeader
         title="復習予定"
         description="分野ごとの演習結果から、SM-2簡略版で次回復習日を提案します。"
+        action={
+          <button
+            type="button"
+            className="btn-secondary w-full sm:w-auto"
+            disabled={repairing}
+            onClick={repairReviews}
+          >
+            <RefreshCw size={18} className={repairing ? 'animate-spin' : ''} />
+            {repairing ? '再計算中...' : '予定を再計算'}
+          </button>
+        }
       />
 
       {error && <p className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
+      {repairMessage && (
+        <p className="mb-5 rounded-xl bg-brand-50 p-4 text-sm font-semibold text-brand-800">
+          {repairMessage}
+        </p>
+      )}
       {loading ? (
         <p className="text-sm text-slate-500">読み込み中...</p>
       ) : !data?.reviews.length ? (

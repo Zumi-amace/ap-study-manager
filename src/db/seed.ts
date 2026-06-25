@@ -51,6 +51,8 @@ export async function seedDatabase(): Promise<void> {
           id: 1,
           user_id: 1,
           link_open_mode: 'external_browser',
+          kakomon_display_mode: 'mobile',
+          review_algorithm_version: 2,
           updated_at: now
         });
       }

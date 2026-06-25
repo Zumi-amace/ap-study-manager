@@ -2,7 +2,7 @@ import { AlertTriangle, ArrowLeft, ExternalLink } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { openExternalBrowser } from '../hooks/useOpenKakomon';
 
-const DEFAULT_URL = 'https://www.ap-siken.com/apkakomon.php';
+const DEFAULT_URL = 'https://www.ap-siken.com/s/apkakomon.php';
 
 function safeUrl(raw: string | null): string {
   if (!raw) return DEFAULT_URL;

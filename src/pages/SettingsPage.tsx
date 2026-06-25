@@ -6,12 +6,13 @@ import {
   getSettings,
   listLinks,
   updateLink,
+  updateKakomonDisplayMode,
   updateLinkOpenMode
 } from '../db/api';
 import { PageHeader } from '../components/PageHeader';
 import { useAsync } from '../hooks/useAsync';
 import { useOpenKakomon } from '../hooks/useOpenKakomon';
-import type { LinkOpenMode, SavedLink } from '../types';
+import type { KakomonDisplayMode, LinkOpenMode, SavedLink } from '../types';
 
 type LinkForm = Pick<SavedLink, 'title' | 'url' | 'description' | 'category'>;
 const emptyForm: LinkForm = { title: '', url: '', description: '', category: '' };
@@ -23,19 +24,30 @@ export function SettingsPage() {
     return { settings, links };
   }, []);
   const [mode, setMode] = useState<LinkOpenMode>('external_browser');
+  const [displayMode, setDisplayMode] = useState<KakomonDisplayMode>('mobile');
   const [modeMessage, setModeMessage] = useState('');
   const [form, setForm] = useState<LinkForm>(emptyForm);
   const [editingId, setEditingId] = useState<number>();
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
-    if (data?.settings) setMode(data.settings.link_open_mode);
+    if (data?.settings) {
+      setMode(data.settings.link_open_mode);
+      setDisplayMode(data.settings.kakomon_display_mode ?? 'mobile');
+    }
   }, [data?.settings]);
 
   async function saveMode(nextMode: LinkOpenMode) {
     setMode(nextMode);
     await updateLinkOpenMode(nextMode);
     setModeMessage('開き方を保存しました。');
+    window.setTimeout(() => setModeMessage(''), 2500);
+  }
+
+  async function saveDisplayMode(nextMode: KakomonDisplayMode) {
+    setDisplayMode(nextMode);
+    await updateKakomonDisplayMode(nextMode);
+    setModeMessage('サイト表示を保存しました。');
     window.setTimeout(() => setModeMessage(''), 2500);
   }
 
@@ -97,6 +109,27 @@ export function SettingsPage() {
           />
         </div>
         {modeMessage && <p className="mt-3 text-sm font-semibold text-brand-700">{modeMessage}</p>}
+      </section>
+
+      <section className="card mt-6">
+        <h2 className="text-lg font-bold">過去問道場の表示版</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          応用情報技術者試験ドットコムのモバイル版とPC版を選べます。
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <ModeOption
+            checked={displayMode === 'mobile'}
+            title="モバイル版"
+            description="スマホ向けの縦長レイアウトで開きます。"
+            onChange={() => saveDisplayMode('mobile')}
+          />
+          <ModeOption
+            checked={displayMode === 'desktop'}
+            title="PC版"
+            description="デスクトップ向けの通常レイアウトで開きます。"
+            onChange={() => saveDisplayMode('desktop')}
+          />
+        </div>
       </section>
 
       <section className="card mt-6">

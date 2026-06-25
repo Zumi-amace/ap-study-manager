@@ -14,12 +14,18 @@ const fakeDb = vi.hoisted(() => ({
       const id = state.nextLogId++;
       state.logs.push({ ...log, id });
       return id;
-    }
+    },
+    where: () => ({
+      equals: () => ({
+        toArray: async () => [...state.logs]
+      })
+    })
   },
   study_log_tags: {
     bulkAdd: async (mappings: Array<{ study_log_id: number; tag_id: number }>) => {
       state.mappings.push(...mappings);
-    }
+    },
+    toArray: async () => [...state.mappings]
   },
   review_schedules: {
     where: () => ({
@@ -36,7 +42,17 @@ const fakeDb = vi.hoisted(() => ({
       const index = state.reviews.findIndex((current) => current.id === review.id);
       if (index >= 0) state.reviews[index] = review as typeof state.reviews[number];
       return review.id;
-    }
+    },
+    clear: async () => {
+      state.reviews.length = 0;
+      state.nextReviewId = 1;
+    },
+    orderBy: () => ({
+      toArray: async () => [...state.reviews]
+    })
+  },
+  weak_area_tags: {
+    bulkGet: async () => []
   },
   transaction: async (
     _mode: string,
@@ -47,7 +63,7 @@ const fakeDb = vi.hoisted(() => ({
 
 vi.mock('./database', () => ({ db: fakeDb }));
 
-import { createStudyLog, recalcReview } from './api';
+import { createStudyLog, rebuildReviewSchedules, recalcReview } from './api';
 
 describe('study log API safeguards', () => {
   beforeEach(() => {
@@ -90,5 +106,30 @@ describe('study log API safeguards', () => {
     expect(latest.last_reviewed_at).toBe('2026-06-25');
     expect(latest.next_review_date).not.toBe(first.next_review_date);
     expect(latest.repetition).toBe(2);
+  });
+
+  it('保存済みログを日付順に再処理して壊れた復習予定を再構築する', async () => {
+    await createStudyLog({
+      studied_at: '2026-06-20',
+      study_time_min: 20,
+      total_questions: 10,
+      correct_count: 9,
+      tag_ids: [1]
+    });
+    await createStudyLog({
+      studied_at: '2026-06-25',
+      study_time_min: 20,
+      total_questions: 10,
+      correct_count: 8,
+      tag_ids: [1]
+    });
+    state.reviews[0].next_review_date = '1999-01-01';
+
+    const rebuilt = await rebuildReviewSchedules();
+
+    expect(state.reviews).toHaveLength(1);
+    expect(state.reviews[0].last_reviewed_at).toBe('2026-06-25');
+    expect(state.reviews[0].next_review_date).toBe('2026-06-28');
+    expect(rebuilt).toHaveLength(1);
   });
 });
