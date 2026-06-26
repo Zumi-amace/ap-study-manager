@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "AP Study Manager Hint Assist",
+  "version": "0.1.0",
+  "description": "応用情報技術者試験ドットコムの問題ページに学習用ヒントボタンを追加します。",
+  "permissions": ["storage"],
+  "host_permissions": ["https://api.anthropic.com/*"],
+  "background": {
+    "service_worker": "runtime/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.ap-siken.com/*"],
+      "js": ["runtime/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

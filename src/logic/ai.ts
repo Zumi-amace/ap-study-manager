@@ -13,7 +13,7 @@ interface GenerateAiAssistInput {
 }
 
 const ANTHROPIC_MESSAGES_URL = 'https://api.anthropic.com/v1/messages';
-const ANTHROPIC_MODEL = 'claude-3-5-haiku-20241022';
+export const DEFAULT_AI_MODEL = 'claude-3-5-haiku-20241022';
 
 export function extractStudyResult(text: string): ExtractedStudyResult {
   const normalized = text
@@ -86,7 +86,7 @@ export async function generateAiAssist({
       'anthropic-dangerous-direct-browser-access': 'true'
     },
     body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
+      model: DEFAULT_AI_MODEL,
       max_tokens: 700,
       temperature: 0.2,
       system:
