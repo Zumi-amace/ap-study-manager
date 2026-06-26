@@ -233,7 +233,8 @@ export async function getSettings(): Promise<AppSettings> {
   return {
     ...settings,
     kakomon_display_mode: settings.kakomon_display_mode ?? 'mobile',
-    review_algorithm_version: settings.review_algorithm_version ?? 1
+    review_algorithm_version: settings.review_algorithm_version ?? 1,
+    anthropic_api_key: settings.anthropic_api_key ?? ''
   };
 }
 
@@ -261,6 +262,17 @@ export async function updateKakomonDisplayMode(
   const settings: AppSettings = {
     ...current,
     kakomon_display_mode: mode,
+    updated_at: new Date().toISOString()
+  };
+  await db.app_settings.put(settings);
+  return settings;
+}
+
+export async function updateAnthropicApiKey(apiKey: string): Promise<AppSettings> {
+  const current = await getSettings();
+  const settings: AppSettings = {
+    ...current,
+    anthropic_api_key: apiKey.trim() || undefined,
     updated_at: new Date().toISOString()
   };
   await db.app_settings.put(settings);

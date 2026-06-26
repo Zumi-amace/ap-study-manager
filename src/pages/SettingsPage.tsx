@@ -1,10 +1,11 @@
-import { Edit3, ExternalLink, Link2, Plus, Save, Trash2, X } from 'lucide-react';
+import { Edit3, ExternalLink, KeyRound, Link2, Plus, Save, Trash2, X } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 import {
   createLink,
   deleteLink,
   getSettings,
   listLinks,
+  updateAnthropicApiKey,
   updateLink,
   updateKakomonDisplayMode,
   updateLinkOpenMode
@@ -25,6 +26,8 @@ export function SettingsPage() {
   }, []);
   const [mode, setMode] = useState<LinkOpenMode>('external_browser');
   const [displayMode, setDisplayMode] = useState<KakomonDisplayMode>('mobile');
+  const [anthropicApiKey, setAnthropicApiKey] = useState('');
+  const [apiKeyMessage, setApiKeyMessage] = useState('');
   const [modeMessage, setModeMessage] = useState('');
   const [form, setForm] = useState<LinkForm>(emptyForm);
   const [editingId, setEditingId] = useState<number>();
@@ -34,6 +37,7 @@ export function SettingsPage() {
     if (data?.settings) {
       setMode(data.settings.link_open_mode);
       setDisplayMode(data.settings.kakomon_display_mode ?? 'mobile');
+      setAnthropicApiKey(data.settings.anthropic_api_key ?? '');
     }
   }, [data?.settings]);
 
@@ -49,6 +53,14 @@ export function SettingsPage() {
     await updateKakomonDisplayMode(nextMode);
     setModeMessage('サイト表示を保存しました。');
     window.setTimeout(() => setModeMessage(''), 2500);
+  }
+
+  async function saveApiKey(event: FormEvent) {
+    event.preventDefault();
+    await updateAnthropicApiKey(anthropicApiKey);
+    setApiKeyMessage(anthropicApiKey.trim() ? 'APIキーを保存しました。' : 'APIキーを削除しました。');
+    window.setTimeout(() => setApiKeyMessage(''), 3000);
+    reload();
   }
 
   async function submitLink(event: FormEvent) {
@@ -130,6 +142,42 @@ export function SettingsPage() {
             onChange={() => saveDisplayMode('desktop')}
           />
         </div>
+      </section>
+
+      <section className="card mt-6">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-700">
+            <KeyRound size={20} />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold">AIアシスト</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              採点結果の貼り付けから解説を生成するため、Anthropic APIキーを端末内に保存します。
+            </p>
+          </div>
+        </div>
+        <form className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]" onSubmit={saveApiKey}>
+          <label className="min-w-0">
+            <span className="label">Anthropic APIキー</span>
+            <input
+              type="password"
+              className="input"
+              value={anthropicApiKey}
+              onChange={(event) => setAnthropicApiKey(event.target.value)}
+              placeholder="sk-ant-..."
+              autoComplete="off"
+            />
+          </label>
+          <button type="submit" className="btn-primary self-end">
+            <Save size={18} />
+            保存
+          </button>
+        </form>
+        <p className="mt-3 text-xs leading-5 text-slate-500">
+          APIキーはこの端末のIndexedDBにのみ保存されます。GitHub Pagesやリポジトリには保存されません。
+          共有端末では入力しないでください。
+        </p>
+        {apiKeyMessage && <p className="mt-3 text-sm font-semibold text-brand-700">{apiKeyMessage}</p>}
       </section>
 
       <section className="card mt-6">

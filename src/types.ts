@@ -52,6 +52,7 @@ export interface AppSettings {
   link_open_mode: LinkOpenMode;
   kakomon_display_mode?: KakomonDisplayMode;
   review_algorithm_version?: number;
+  anthropic_api_key?: string;
   updated_at: string;
 }
 
