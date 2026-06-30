@@ -44,6 +44,12 @@ jobs:
         env:
           GITHUB_PAGES: "true"
 
+      - name: Build extension runtime
+        run: pnpm build:ext
+
+      - name: Ensure extension runtime is up to date
+        run: git diff --exit-code extension/runtime/
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
