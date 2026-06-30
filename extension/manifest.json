@@ -8,6 +8,7 @@
   "background": {
     "service_worker": "runtime/background.js"
   },
+  "options_page": "options.html",
   "content_scripts": [
     {
       "matches": ["https://*.ap-siken.com/*"],

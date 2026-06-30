@@ -7,28 +7,44 @@ export const HINT_LEVEL_LABELS: Record<HintLevel, string> = {
 };
 
 export function buildHintPrompt(problemText: string, level: HintLevel): string {
+  const levelInstruction = getLevelInstruction(level);
   return `あなたは応用情報技術者試験 午前対策の学習コーチです。
-最初から答えだけを出さず、指定レベルのヒントを出してください。
+目的は学習支援です。カンニング装置化を避け、最初から答えだけを出さないでください。
 
 ${HINT_LEVEL_LABELS[level]}
+
+${levelInstruction}
 
 問題文と選択肢:
 ${problemText}
 
 制約:
-- カンニング装置ではなく学習支援にする
-- Level 1では答えを明かさない
-- Level 2では選択肢を絞る観点を示す
-- Level 3では理由つきで理解を助ける`;
+- 出力は日本語
+- 180字以内
+- 問題文と選択肢に含まれる情報だけを使う
+- 必要以上に長くしない`;
 }
 
-export function buildMockHint(problemText: string, level: HintLevel): string {
-  const preview = problemText.trim().slice(0, 80) || '現在の問題';
-  return `${HINT_LEVEL_LABELS[level]}
+function getLevelInstruction(level: HintLevel): string {
+  if (level === 1) {
+    return [
+      'Level 1では着眼点だけを示してください。',
+      '正解の選択肢名や答えそのものは明かさないでください。',
+      '選択肢の直接除外もしすぎないでください。'
+    ].join('\n');
+  }
 
-これはフェーズ1のモックヒントです。
-まず「問われている用語・計算・判断基準」を分けて確認してみてください。
+  if (level === 2) {
+    return [
+      'Level 2では選択肢を絞る観点を示してください。',
+      'ただし正解を断定しないでください。',
+      'どの条件を確認すれば候補を減らせるかを説明してください。'
+    ].join('\n');
+  }
 
-対象プレビュー:
-${preview}`;
+  return [
+    'Level 3では正解に近い解説をしてください。',
+    '理由を説明し、学習者が理解できるようにしてください。',
+    'ただし必要以上に長くせず、答えだけの出力にしないでください。'
+  ].join('\n');
 }

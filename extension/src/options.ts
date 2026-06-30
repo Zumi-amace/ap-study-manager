@@ -1,12 +1,40 @@
-const API_KEY_STORAGE_KEY = 'anthropic_api_key';
+import { ANTHROPIC_API_KEY_STORAGE_KEY } from './config';
 
-export async function saveAnthropicApiKey(apiKey: string): Promise<void> {
+const form = document.querySelector<HTMLFormElement>('#api-key-form');
+const apiKeyInput = document.querySelector<HTMLInputElement>('#api-key-input');
+const message = document.querySelector<HTMLParagraphElement>('#message');
+
+async function loadSavedApiKey(): Promise<void> {
+  if (!apiKeyInput) return;
+  const result = await chrome.storage.local.get(ANTHROPIC_API_KEY_STORAGE_KEY);
+  const saved = result[ANTHROPIC_API_KEY_STORAGE_KEY];
+  if (typeof saved === 'string') apiKeyInput.value = saved;
+}
+
+async function saveApiKey(event: SubmitEvent): Promise<void> {
+  event.preventDefault();
+  if (!apiKeyInput || !message) return;
+
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) {
+    showMessage('APIキーを入力してください。', 'error');
+    return;
+  }
+
   await chrome.storage.local.set({
-    [API_KEY_STORAGE_KEY]: apiKey.trim()
+    [ANTHROPIC_API_KEY_STORAGE_KEY]: apiKey
   });
+  showMessage('APIキーを保存しました。', 'success');
 }
 
-export async function getAnthropicApiKey(): Promise<string> {
-  const result = await chrome.storage.local.get(API_KEY_STORAGE_KEY);
-  return typeof result[API_KEY_STORAGE_KEY] === 'string' ? result[API_KEY_STORAGE_KEY] : '';
+function showMessage(text: string, type: 'success' | 'error'): void {
+  if (!message) return;
+  message.textContent = text;
+  message.className = type;
 }
+
+form?.addEventListener('submit', (event) => {
+  void saveApiKey(event);
+});
+
+void loadSavedApiKey();
