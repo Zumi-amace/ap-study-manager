@@ -1,3 +1,4 @@
+import { extractProblemFromDocument } from './selectors';
 import type { HintRequestMessage, HintResponseMessage } from './types';
 
 const ROOT_ID = 'ap-study-manager-hint-assist-root';
@@ -91,14 +92,26 @@ function mountHintButton(): void {
 }
 
 async function requestHint(shadow: ShadowRoot): Promise<void> {
+  let problemText = '';
+  try {
+    problemText = extractProblemFromDocument(document);
+  } catch (error) {
+    renderOverlay(
+      shadow,
+      error instanceof Error ? error.message : '問題文を取得できませんでした。',
+      { showNotice: false }
+    );
+    return;
+  }
+
   renderOverlay(
     shadow,
-    'この問題文をAIに送信します。\n\nフェーズ1ではAPI送信せず、backgroundとの通信確認用モックヒントを表示します。'
+    'この問題文をAIに送信します。\n\nフェーズ2では、取得した問題文・選択肢だけをbackgroundへ送ります。'
   );
 
   const message: HintRequestMessage = {
     type: 'AP_STUDY_HINT_REQUEST',
-    problemText: buildPhaseOneProblemText(),
+    problemText,
     level: 1
   };
 
@@ -110,8 +123,13 @@ async function requestHint(shadow: ShadowRoot): Promise<void> {
   }
 }
 
-function renderOverlay(shadow: ShadowRoot, text: string): void {
+function renderOverlay(
+  shadow: ShadowRoot,
+  text: string,
+  options: { showNotice?: boolean } = {}
+): void {
   shadow.querySelector('.overlay')?.remove();
+  const showNotice = options.showNotice ?? true;
 
   const overlay = document.createElement('section');
   overlay.className = 'overlay';
@@ -121,7 +139,7 @@ function renderOverlay(shadow: ShadowRoot, text: string): void {
       <button class="close" type="button" aria-label="閉じる">×</button>
     </div>
     <div class="body">
-      <div class="notice">この問題文をAIに送信します。送信対象は問題文・選択肢のみです。</div>
+      ${showNotice ? '<div class="notice">この問題文をAIに送信します。送信対象は問題文・選択肢のみです。</div>' : ''}
       <div class="hint"></div>
     </div>
   `;
@@ -130,12 +148,6 @@ function renderOverlay(shadow: ShadowRoot, text: string): void {
   if (hint) hint.textContent = text;
   overlay.querySelector('.close')?.addEventListener('click', () => overlay.remove());
   shadow.appendChild(overlay);
-}
-
-function buildPhaseOneProblemText(): string {
-  const title = document.title.trim();
-  const path = location.pathname;
-  return `フェーズ1通信確認用\nページタイトル: ${title}\nパス: ${path}`;
 }
 
 mountHintButton();

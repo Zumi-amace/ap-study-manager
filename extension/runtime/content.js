@@ -1,4 +1,62 @@
 (() => {
+  // extension/src/selectors.ts
+  var SELECTOR_ERROR_MESSAGE = "問題文を取得できませんでした。過去問道場のページ構造が変わった可能性があります。";
+  var CHOICE_LABELS = ["ア", "イ", "ウ", "エ", "オ", "カ"];
+  var AP_SIKEN_SELECTORS = {
+    problemCandidates: ["#mondai", ".sentence#mondai", ".mondai", "[data-question]"],
+    choiceContainers: ["#qPage .selectList", ".main.kako .ansbg > ul.selectList", "#mondai ~ .ansbg .selectList"],
+    choiceItems: ["li"],
+    choiceTextInsideItem: ['span[id^="select_"]', ".choiceText", ".answerText"]
+  };
+  function extractProblemFromDocument(documentRef) {
+    const problemText = findProblemText(documentRef);
+    const choices = findChoiceTexts(documentRef);
+    if (!problemText || choices.length === 0) throw new Error(SELECTOR_ERROR_MESSAGE);
+    return formatProblemText({ text: problemText, choices });
+  }
+  function formatProblemText(problem) {
+    const choices = problem.choices.map((choice, index) => `${CHOICE_LABELS[index] ?? `${index + 1}.`} ${choice}`).join("\n");
+    return `問題文:
+${normalizeText(problem.text)}
+
+選択肢:
+${choices}`;
+  }
+  function findChoiceTexts(documentRef) {
+    for (const containerSelector of AP_SIKEN_SELECTORS.choiceContainers) {
+      const container = documentRef.querySelector(containerSelector);
+      if (!container) continue;
+      const choices = [...container.querySelectorAll(AP_SIKEN_SELECTORS.choiceItems.join(","))].map((item) => normalizeText(extractChoiceItemText(item))).filter(isChoiceText);
+      if (choices.length >= 2) return uniqueTexts(choices).slice(0, 6);
+    }
+    return [];
+  }
+  function findProblemText(documentRef) {
+    for (const selector of AP_SIKEN_SELECTORS.problemCandidates) {
+      const element = documentRef.querySelector(selector);
+      const text = normalizeText(element?.textContent ?? "");
+      if (text) return text;
+    }
+    return "";
+  }
+  function extractChoiceItemText(item) {
+    for (const selector of AP_SIKEN_SELECTORS.choiceTextInsideItem) {
+      const element = item.querySelector(selector);
+      const text = element?.textContent;
+      if (text) return text;
+    }
+    return item.textContent ?? "";
+  }
+  function normalizeText(text) {
+    return text.replace(/\u00a0/g, " ").replace(/\u3000/g, " ").replace(/[ \t\r\n]+/g, " ").trim();
+  }
+  function isChoiceText(text) {
+    return text.length >= 1 && text.length <= 500;
+  }
+  function uniqueTexts(texts) {
+    return [...new Set(texts)];
+  }
+
   // extension/src/content.ts
   var ROOT_ID = "ap-study-manager-hint-assist-root";
   function mountHintButton() {
@@ -85,13 +143,24 @@
     shadow.append(style, button);
   }
   async function requestHint(shadow) {
+    let problemText = "";
+    try {
+      problemText = extractProblemFromDocument(document);
+    } catch (error) {
+      renderOverlay(
+        shadow,
+        error instanceof Error ? error.message : "問題文を取得できませんでした。",
+        { showNotice: false }
+      );
+      return;
+    }
     renderOverlay(
       shadow,
-      "この問題文をAIに送信します。\n\nフェーズ1ではAPI送信せず、backgroundとの通信確認用モックヒントを表示します。"
+      "この問題文をAIに送信します。\n\nフェーズ2では、取得した問題文・選択肢だけをbackgroundへ送ります。"
     );
     const message = {
       type: "AP_STUDY_HINT_REQUEST",
-      problemText: buildPhaseOneProblemText(),
+      problemText,
       level: 1
     };
     try {
@@ -101,8 +170,9 @@
       renderOverlay(shadow, error instanceof Error ? error.message : "backgroundとの通信に失敗しました。");
     }
   }
-  function renderOverlay(shadow, text) {
+  function renderOverlay(shadow, text, options = {}) {
     shadow.querySelector(".overlay")?.remove();
+    const showNotice = options.showNotice ?? true;
     const overlay = document.createElement("section");
     overlay.className = "overlay";
     overlay.innerHTML = `
@@ -111,7 +181,7 @@
       <button class="close" type="button" aria-label="閉じる">×</button>
     </div>
     <div class="body">
-      <div class="notice">この問題文をAIに送信します。送信対象は問題文・選択肢のみです。</div>
+      ${showNotice ? '<div class="notice">この問題文をAIに送信します。送信対象は問題文・選択肢のみです。</div>' : ""}
       <div class="hint"></div>
     </div>
   `;
@@ -119,13 +189,6 @@
     if (hint) hint.textContent = text;
     overlay.querySelector(".close")?.addEventListener("click", () => overlay.remove());
     shadow.appendChild(overlay);
-  }
-  function buildPhaseOneProblemText() {
-    const title = document.title.trim();
-    const path = location.pathname;
-    return `フェーズ1通信確認用
-ページタイトル: ${title}
-パス: ${path}`;
   }
   mountHintButton();
 })();
