@@ -1,15 +1,14 @@
-const ROOT_ID = 'ap-study-manager-hint-assist-root';
-
-function mountHintButton() {
-  if (document.getElementById(ROOT_ID)) return;
-
-  const host = document.createElement('div');
-  host.id = ROOT_ID;
-  document.documentElement.appendChild(host);
-
-  const shadow = host.attachShadow({ mode: 'closed' });
-  const style = document.createElement('style');
-  style.textContent = `
+(() => {
+  // extension/src/content.ts
+  var ROOT_ID = "ap-study-manager-hint-assist-root";
+  function mountHintButton() {
+    if (document.getElementById(ROOT_ID)) return;
+    const host = document.createElement("div");
+    host.id = ROOT_ID;
+    document.documentElement.appendChild(host);
+    const shadow = host.attachShadow({ mode: "closed" });
+    const style = document.createElement("style");
+    style.textContent = `
     :host {
       all: initial;
       color-scheme: light;
@@ -78,45 +77,35 @@ function mountHintButton() {
       padding: 10px;
     }
   `;
-
-  const button = document.createElement('button');
-  button.className = 'button';
-  button.type = 'button';
-  button.textContent = 'ヒント';
-  button.addEventListener('click', () => requestHint(shadow));
-
-  shadow.append(style, button);
-}
-
-async function requestHint(shadow) {
-  renderOverlay(
-    shadow,
-    'この問題文をAIに送信します。\n\nフェーズ1ではAPI送信せず、backgroundとの通信確認用モックヒントを表示します。'
-  );
-
-  const message = {
-    type: 'AP_STUDY_HINT_REQUEST',
-    problemText: buildPhaseOneProblemText(),
-    level: 1
-  };
-
-  try {
-    const response = await chrome.runtime.sendMessage(message);
+    const button = document.createElement("button");
+    button.className = "button";
+    button.type = "button";
+    button.textContent = "ヒント";
+    button.addEventListener("click", () => requestHint(shadow));
+    shadow.append(style, button);
+  }
+  async function requestHint(shadow) {
     renderOverlay(
       shadow,
-      response.ok ? response.hint ?? 'ヒントを取得できませんでした。' : response.error ?? 'ヒント取得に失敗しました。'
+      "この問題文をAIに送信します。\n\nフェーズ1ではAPI送信せず、backgroundとの通信確認用モックヒントを表示します。"
     );
-  } catch (error) {
-    renderOverlay(shadow, error instanceof Error ? error.message : 'backgroundとの通信に失敗しました。');
+    const message = {
+      type: "AP_STUDY_HINT_REQUEST",
+      problemText: buildPhaseOneProblemText(),
+      level: 1
+    };
+    try {
+      const response = await chrome.runtime.sendMessage(message);
+      renderOverlay(shadow, response.ok ? response.hint ?? "ヒントを取得できませんでした。" : response.error ?? "ヒント取得に失敗しました。");
+    } catch (error) {
+      renderOverlay(shadow, error instanceof Error ? error.message : "backgroundとの通信に失敗しました。");
+    }
   }
-}
-
-function renderOverlay(shadow, text) {
-  shadow.querySelector('.overlay')?.remove();
-
-  const overlay = document.createElement('section');
-  overlay.className = 'overlay';
-  overlay.innerHTML = `
+  function renderOverlay(shadow, text) {
+    shadow.querySelector(".overlay")?.remove();
+    const overlay = document.createElement("section");
+    overlay.className = "overlay";
+    overlay.innerHTML = `
     <div class="header">
       <div class="title">AP Study ヒント</div>
       <button class="close" type="button" aria-label="閉じる">×</button>
@@ -126,17 +115,17 @@ function renderOverlay(shadow, text) {
       <div class="hint"></div>
     </div>
   `;
-
-  const hint = overlay.querySelector('.hint');
-  if (hint) hint.textContent = text;
-  overlay.querySelector('.close')?.addEventListener('click', () => overlay.remove());
-  shadow.appendChild(overlay);
-}
-
-function buildPhaseOneProblemText() {
-  const title = document.title.trim();
-  const path = location.pathname;
-  return `フェーズ1通信確認用\nページタイトル: ${title}\nパス: ${path}`;
-}
-
-mountHintButton();
+    const hint = overlay.querySelector(".hint");
+    if (hint) hint.textContent = text;
+    overlay.querySelector(".close")?.addEventListener("click", () => overlay.remove());
+    shadow.appendChild(overlay);
+  }
+  function buildPhaseOneProblemText() {
+    const title = document.title.trim();
+    const path = location.pathname;
+    return `フェーズ1通信確認用
+ページタイトル: ${title}
+パス: ${path}`;
+  }
+  mountHintButton();
+})();
