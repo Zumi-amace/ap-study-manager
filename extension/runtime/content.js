@@ -3,7 +3,7 @@
   var SELECTOR_ERROR_MESSAGE = "問題文を取得できませんでした。過去問道場のページ構造が変わった可能性があります。";
   var CHOICE_LABELS = ["ア", "イ", "ウ", "エ", "オ", "カ"];
   var AP_SIKEN_SELECTORS = {
-    problemCandidates: ["#mondai", ".sentence#mondai", ".mondai", "[data-question]"],
+    problemCandidates: ["#mondai"],
     choiceContainers: ["#qPage .selectList", ".main.kako .ansbg > ul.selectList", "#mondai ~ .ansbg .selectList"],
     choiceItems: ["li"],
     choiceTextInsideItem: ['span[id^="select_"]', ".choiceText", ".answerText"]
@@ -27,7 +27,7 @@ ${choices}`;
       const container = documentRef.querySelector(containerSelector);
       if (!container) continue;
       const choices = [...container.querySelectorAll(AP_SIKEN_SELECTORS.choiceItems.join(","))].map((item) => normalizeText(extractChoiceItemText(item))).filter(isChoiceText);
-      if (choices.length >= 2) return uniqueTexts(choices).slice(0, 6);
+      if (choices.length >= 2) return choices.slice(0, 6);
     }
     return [];
   }
@@ -52,9 +52,6 @@ ${choices}`;
   }
   function isChoiceText(text) {
     return text.length >= 1 && text.length <= 500;
-  }
-  function uniqueTexts(texts) {
-    return [...new Set(texts)];
   }
 
   // extension/src/content.ts

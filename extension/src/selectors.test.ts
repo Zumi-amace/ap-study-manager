@@ -14,23 +14,24 @@ describe('extractProblemFromDocument', () => {
   it('PC版の問題文と選択肢を取得して整形する', () => {
     const documentRef = documentFrom(`
       <main id="mainCol">
-        <div class="main kako">
-          <h3 class="qno">問1</h3>
-          <div id="mondai">論理式P，Qが真であるとき，真になる式はどれか。</div>
-          <div class="ansbg">
+        <div class="main kako"><h2>応用情報技術者令和7年春期 午前 問1</h2>
+          <h3 class="qno">問1<div id="calcBtn"></div></h3>
+          <div id="mondai">論理式P，Qがいずれも真であるとき，論理式Rの真偽にかかわらず真になる式はどれか。</div>
+          <div class="ansbg" style="margin:10px 0 50px">
             <ul class="selectList col1">
-              <li><button class="selectBtn">ア</button><span id="select_a">P→Q</span></li>
-              <li><button class="selectBtn">イ</button><span id="select_i">Q→R</span></li>
-              <li><button class="selectBtn">ウ</button><span id="select_u">R→Q</span></li>
-              <li><button class="selectBtn">エ</button><span id="select_e">P∧Q</span></li>
+              <li><button class="selectBtn">ア</button><span id="select_a">((P→Q)∧(Q→P))→(R→Q)</span></li>
+              <li><button class="selectBtn">イ</button><span id="select_i">((P→Q)∧(Q→P))→(Q→R)</span></li>
+              <li><button class="selectBtn">ウ</button><span id="select_u">((P→Q)∨(Q→P))→(R→Q)</span></li>
+              <li><button class="selectBtn" id="t">エ</button><span id="select_e">((P→Q)∨(Q→P))→(Q→R)</span></li>
             </ul>
           </div>
+          <div id="ans"></div>
         </div>
       </main>
     `);
 
     expect(extractProblemFromDocument(documentRef)).toBe(
-      '問題文:\n論理式P，Qが真であるとき，真になる式はどれか。\n\n選択肢:\nア P→Q\nイ Q→R\nウ R→Q\nエ P∧Q'
+      '問題文:\n論理式P，Qがいずれも真であるとき，論理式Rの真偽にかかわらず真になる式はどれか。\n\n選択肢:\nア ((P→Q)∧(Q→P))→(R→Q)\nイ ((P→Q)∧(Q→P))→(Q→R)\nウ ((P→Q)∨(Q→P))→(R→Q)\nエ ((P→Q)∨(Q→P))→(Q→R)'
     );
   });
 
@@ -38,20 +39,22 @@ describe('extractProblemFromDocument', () => {
     const documentRef = documentFrom(`
       <div id="qPage" class="qPage">
         <section class="roundBox">
-          <div class="sentence" id="mondai">M/M/1の待ち行列モデルにおいて，平均待ち時間は何倍になるか。</div>
-        </section>
-        <section class="roundBox">
-          <ul class="selectList">
-            <li>1.25</li>
-            <li>1.60</li>
-            <li>2.00</li>
-            <li>3.00</li>
-          </ul>
-        </section>
+          <div class="big">問1<a href="javascript:void(0)" class="toAPage arrowBtn">解説へ</a><div id="calcBtn"><i class="calc"></i></div></div>
+          <div class="sentence" id="mondai">論理式P，Qがいずれも真であるとき，論理式Rの真偽にかかわらず真になる式はどれか。</div>
+          <p class="grayText"></p>
+        </section><section class="roundBox"><ul class="selectList">
+          <li>((P→Q)∧(Q→P))→(R→Q)</li>
+          <li>((P→Q)∧(Q→P))→(Q→R)</li>
+          <li>((P→Q)∨(Q→P))→(R→Q)</li>
+          <li>((P→Q)∨(Q→P))→(Q→R)</li>
+        </ul></section>
+        <ul class="selectBtn"><li><a href="javascript:void(0)">ア</a></li><li><a href="javascript:void(0)">イ</a></li></ul>
       </div>
     `);
 
-    expect(extractProblemFromDocument(documentRef)).toContain('ア 1.25\nイ 1.60\nウ 2.00\nエ 3.00');
+    expect(extractProblemFromDocument(documentRef)).toContain(
+      'ア ((P→Q)∧(Q→P))→(R→Q)\nイ ((P→Q)∧(Q→P))→(Q→R)\nウ ((P→Q)∨(Q→P))→(R→Q)\nエ ((P→Q)∨(Q→P))→(Q→R)'
+    );
   });
 
   it('全角・改行を含む本文と選択肢を1行に正規化する', () => {
@@ -114,6 +117,26 @@ describe('extractProblemFromDocument', () => {
     expect(result).toContain('ア 正しい対象A');
     expect(result).not.toContain('過去問道場');
     expect(result).not.toContain('利用規約');
+  });
+
+  it('同じ文言の選択肢を重複除去せず保持する', () => {
+    const documentRef = documentFrom(`
+      <div class="main kako">
+        <div id="mondai">同じ文言の選択肢を含む問題です。</div>
+        <div class="ansbg">
+          <ul class="selectList">
+            <li><span id="select_a">同じ選択肢</span></li>
+            <li><span id="select_i">同じ選択肢</span></li>
+            <li><span id="select_u">別の選択肢</span></li>
+            <li><span id="select_e">さらに別の選択肢</span></li>
+          </ul>
+        </div>
+      </div>
+    `);
+
+    expect(extractProblemFromDocument(documentRef)).toContain(
+      'ア 同じ選択肢\nイ 同じ選択肢\nウ 別の選択肢\nエ さらに別の選択肢'
+    );
   });
 });
 

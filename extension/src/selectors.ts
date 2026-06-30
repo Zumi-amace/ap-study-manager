@@ -6,7 +6,7 @@ export const SELECTOR_ERROR_MESSAGE =
 const CHOICE_LABELS = ['ア', 'イ', 'ウ', 'エ', 'オ', 'カ'];
 
 export const AP_SIKEN_SELECTORS = {
-  problemCandidates: ['#mondai', '.sentence#mondai', '.mondai', '[data-question]'],
+  problemCandidates: ['#mondai'],
   choiceContainers: ['#qPage .selectList', '.main.kako .ansbg > ul.selectList', '#mondai ~ .ansbg .selectList'],
   choiceItems: ['li'],
   choiceTextInsideItem: ['span[id^="select_"]', '.choiceText', '.answerText']
@@ -46,7 +46,8 @@ function findChoiceTexts(documentRef: Document): string[] {
       .map((item) => normalizeText(extractChoiceItemText(item)))
       .filter(isChoiceText);
 
-    if (choices.length >= 2) return uniqueTexts(choices).slice(0, 6);
+    // 選択肢は順番と個数が重要。同じ文言の選択肢があり得るため重複除去しない。
+    if (choices.length >= 2) return choices.slice(0, 6);
   }
 
   return [];
@@ -80,8 +81,4 @@ export function normalizeText(text: string): string {
 
 function isChoiceText(text: string): boolean {
   return text.length >= 1 && text.length <= 500;
-}
-
-function uniqueTexts(texts: string[]): string[] {
-  return [...new Set(texts)];
 }
